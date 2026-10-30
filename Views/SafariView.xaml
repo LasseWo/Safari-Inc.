@@ -1,0 +1,164 @@
+<UserControl x:Class="SafariInc.Views.SafariView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid>
+        <!-- 1. Köder auswählen -->
+        <DockPanel x:Name="BaitPanel">
+            <StackPanel DockPanel.Dock="Top">
+                <TextBlock Text="Wähle deinen Köder" Style="{StaticResource Heading}" />
+                <TextBlock Style="{StaticResource Hint}"
+                           Text="Teurere Köder locken seltenere Tiere an. Auf Safari hörst du ein Tiergeräusch – errate das Tier, bevor die Zeit abläuft!" />
+            </StackPanel>
+
+            <!-- Bubbling: Alle Kaufen-/Safari-Buttons der Karten landen in EINEM Handler -->
+            <ItemsControl x:Name="BaitList" ItemsSource="{Binding Baits}" ButtonBase.Click="BaitList_Click"
+                          VerticalAlignment="Top">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <UniformGrid Columns="3" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <TextBlock Text="{Binding Info.Emoji}" Style="{StaticResource Emoji}" FontSize="72"
+                                           Foreground="#D84315" />
+                                <TextBlock Text="{Binding Info.Name}" FontSize="24" FontWeight="Bold"
+                                           HorizontalAlignment="Center" Foreground="{StaticResource Ink}" />
+                                <TextBlock Text="{Binding Info.Description}" FontSize="15" TextWrapping="Wrap"
+                                           TextAlignment="Center" Foreground="#795548" Margin="0,4" MinHeight="40" />
+                                <TextBlock Text="{Binding ChancesText}" FontSize="12" TextWrapping="Wrap"
+                                           TextAlignment="Center" Foreground="#9E9E9E" Margin="0,0,0,8" />
+                                <TextBlock HorizontalAlignment="Center" FontSize="20" Margin="0,0,0,8"
+                                           Foreground="{StaticResource Ink}">
+                                    <Run Text="Vorrat:" />
+                                    <Run Text="{Binding Count, Mode=OneWay}" FontWeight="Bold" />
+                                </TextBlock>
+                                <Button Tag="buy" Background="#FFE082">
+                                    <TextBlock>
+                                        <Run Text="Kaufen für" />
+                                        <Run Text="{Binding Info.Price, Mode=OneWay}" />
+                                        <Run Text="Münzen" />
+                                    </TextBlock>
+                                </Button>
+                                <Button Tag="hunt" Background="#7CB342" Foreground="White" FontSize="20">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="🚙" Style="{StaticResource Emoji}" Margin="0,0,8,0" />
+                                        <TextBlock Text="Auf Safari!" />
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </DockPanel>
+
+        <!-- 2. + 3. Safari und Tier erraten -->
+        <Grid x:Name="HuntPanel" Visibility="Collapsed">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="170" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <Border CornerRadius="18" ClipToBounds="True" Margin="10,0">
+                <Canvas x:Name="Landscape" ClipToBounds="True">
+                    <Canvas.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                            <GradientStop Color="#81D4FA" Offset="0" />
+                            <GradientStop Color="#FFE0B2" Offset="0.62" />
+                            <GradientStop Color="#C5A05A" Offset="0.63" />
+                            <GradientStop Color="#A1887F" Offset="1" />
+                        </LinearGradientBrush>
+                    </Canvas.Background>
+                    <Ellipse Width="70" Height="70" Fill="#FFEB3B" Canvas.Left="60" Canvas.Top="14" />
+                    <TextBlock Text="🌳" Style="{StaticResource Emoji}" FontSize="64" Foreground="#2E7D32"
+                               Canvas.Left="220" Canvas.Top="30" />
+                    <TextBlock Text="🌴" Style="{StaticResource Emoji}" FontSize="72" Foreground="#388E3C"
+                               Canvas.Left="520" Canvas.Top="20" />
+                    <TextBlock Text="🌳" Style="{StaticResource Emoji}" FontSize="54" Foreground="#2E7D32"
+                               Canvas.Left="820" Canvas.Top="42" />
+                    <TextBlock x:Name="Jeep" Text="🚙" Style="{StaticResource Emoji}" FontSize="60"
+                               Foreground="#E65100" Canvas.Top="84">
+                        <TextBlock.RenderTransform>
+                            <TranslateTransform x:Name="JeepShift" X="-200" />
+                        </TextBlock.RenderTransform>
+                    </TextBlock>
+                </Canvas>
+            </Border>
+
+            <Border Grid.Row="1" Style="{StaticResource Card}">
+                <Grid>
+                    <TextBlock x:Name="DrivingText" Text="Der Jeep fährt in die Savanne …" FontSize="30"
+                               FontWeight="Bold" Foreground="#795548"
+                               HorizontalAlignment="Center" VerticalAlignment="Center" />
+
+                    <DockPanel x:Name="GuessArea" Visibility="Collapsed">
+                        <DockPanel DockPanel.Dock="Top">
+                            <Button DockPanel.Dock="Right" Click="Replay_Click" Background="#B3E5FC"
+                                    ToolTip="Geräusch nochmal abspielen">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="🔊" Style="{StaticResource Emoji}" Margin="0,0,8,0" />
+                                    <TextBlock Text="Nochmal hören" />
+                                </StackPanel>
+                            </Button>
+                            <TextBlock x:Name="QuestionText" Text="Welches Tier hörst du?" FontSize="28"
+                                       FontWeight="Bold" Foreground="{StaticResource Ink}" VerticalAlignment="Center" />
+                        </DockPanel>
+
+                        <ProgressBar x:Name="TimeBar" DockPanel.Dock="Top" Height="14" Maximum="1" Value="1"
+                                     Margin="0,8" Foreground="#FB8C00" Background="#FFE0B2" BorderThickness="0" />
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="260" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Silhouette wird mit der Zeit schärfer -->
+                            <TextBlock x:Name="Silhouette" Style="{StaticResource Emoji}" FontSize="150"
+                                       Foreground="#4E342E" VerticalAlignment="Center">
+                                <TextBlock.Effect>
+                                    <BlurEffect x:Name="SilhouetteBlur" Radius="40" />
+                                </TextBlock.Effect>
+                            </TextBlock>
+
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <ItemsControl x:Name="GuessList" ButtonBase.Click="GuessList_Click">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <UniformGrid Columns="2" />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Button Background="#FFF3E0" Height="90" Margin="8" BorderBrush="#FFB74D"
+                                                    BorderThickness="3" AutomationProperties.Name="{Binding Name}">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="{Binding Emoji}" Style="{StaticResource Emoji}"
+                                                               FontSize="44" Foreground="{Binding RarityInfo.Color}"
+                                                               Margin="0,0,14,0" />
+                                                    <TextBlock Text="{Binding Name}" FontSize="24"
+                                                               VerticalAlignment="Center" />
+                                                </StackPanel>
+                                            </Button>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+
+                                <StackPanel x:Name="ResultPanel" Visibility="Collapsed" Margin="8,12,8,0">
+                                    <TextBlock x:Name="ResultText" FontSize="24" FontWeight="Bold" TextWrapping="Wrap"
+                                               Margin="0,0,0,10" />
+                                    <Button Content="Weiter" Click="Continue_Click" FontSize="22"
+                                            Background="#7CB342" Foreground="White" HorizontalAlignment="Left"
+                                            Padding="40,12" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Grid>
+                    </DockPanel>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

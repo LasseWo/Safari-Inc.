@@ -1,0 +1,84 @@
+<UserControl x:Class="SafariInc.Views.ZooView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <DockPanel>
+        <StackPanel DockPanel.Dock="Top">
+            <TextBlock Text="Dein Zoo" Style="{StaticResource Heading}" />
+            <TextBlock Style="{StaticResource Hint}"
+                       Text="Tippe auf ein Tier, um es zu hören. Gesperrte Gehege kannst du kaufen. Verkauft wird beim Händler." />
+        </StackPanel>
+
+        <!-- Bubbling: Ein Click-Handler für alle Gehege -->
+        <ItemsControl ItemsSource="{Binding Enclosures}" ButtonBase.Click="Enclosures_Click">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <UniformGrid Columns="3" Rows="2" />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Button Margin="10" Padding="0" BorderBrush="{StaticResource Wood}" BorderThickness="7"
+                            HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
+                        <Button.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                <GradientStop Color="#C5E1A5" Offset="0" />
+                                <GradientStop Color="#8BC34A" Offset="1" />
+                            </LinearGradientBrush>
+                        </Button.Background>
+                        <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                            <TextBlock x:Name="Number" HorizontalAlignment="Left" VerticalAlignment="Top"
+                                       Margin="12,8" FontSize="14" Foreground="#33691E">
+                                <Run Text="Gehege" />
+                                <Run Text="{Binding Number, Mode=OneWay}" />
+                            </TextBlock>
+
+                            <!-- belegt -->
+                            <StackPanel x:Name="AnimalView" VerticalAlignment="Center" Visibility="Collapsed">
+                                <TextBlock Text="{Binding Animal.Species.Emoji}" Style="{StaticResource Emoji}"
+                                           FontSize="80" Foreground="{Binding Animal.Species.RarityInfo.Color}" />
+                                <TextBlock Text="{Binding Animal.Species.Name}" FontSize="22"
+                                           HorizontalAlignment="Center" />
+                                <Border CornerRadius="8" Padding="8,2" HorizontalAlignment="Center" Margin="0,4,0,0"
+                                        Background="{Binding Animal.Species.RarityInfo.Color}">
+                                    <TextBlock Text="{Binding Animal.Species.RarityInfo.Name}" FontSize="13"
+                                               Foreground="White" />
+                                </Border>
+                            </StackPanel>
+
+                            <!-- frei -->
+                            <TextBlock x:Name="EmptyView" Text="leer" FontSize="22" FontStyle="Italic"
+                                       Foreground="#689F38" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       Visibility="Collapsed" />
+
+                            <!-- gesperrt -->
+                            <StackPanel x:Name="LockedView" VerticalAlignment="Center" Visibility="Collapsed">
+                                <TextBlock Text="🔒" Style="{StaticResource Emoji}" FontSize="48" Foreground="#757575" />
+                                <TextBlock HorizontalAlignment="Center" FontSize="18" Foreground="#424242">
+                                    <Run Text="Bauen für" />
+                                    <Run Text="{Binding Price, Mode=OneWay}" FontWeight="Bold" />
+                                    <Run Text="Münzen" />
+                                </TextBlock>
+                            </StackPanel>
+                        </Grid>
+                    </Button>
+                    <DataTemplate.Triggers>
+                        <DataTrigger Binding="{Binding IsEmpty}" Value="False">
+                            <Setter TargetName="AnimalView" Property="Visibility" Value="Visible" />
+                        </DataTrigger>
+                        <MultiDataTrigger>
+                            <MultiDataTrigger.Conditions>
+                                <Condition Binding="{Binding IsEmpty}" Value="True" />
+                                <Condition Binding="{Binding IsUnlocked}" Value="True" />
+                            </MultiDataTrigger.Conditions>
+                            <Setter TargetName="EmptyView" Property="Visibility" Value="Visible" />
+                        </MultiDataTrigger>
+                        <DataTrigger Binding="{Binding IsUnlocked}" Value="False">
+                            <Setter TargetName="LockedView" Property="Visibility" Value="Visible" />
+                            <Setter TargetName="Number" Property="Foreground" Value="#757575" />
+                        </DataTrigger>
+                    </DataTemplate.Triggers>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </DockPanel>
+</UserControl>

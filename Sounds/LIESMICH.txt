@@ -1,0 +1,8 @@
+Hier können echte Tiergeräusche als WAV-Datei abgelegt werden.
+Der Dateiname muss der Tier-Id aus Model\Catalog.cs entsprechen, z. B.:
+
+  loewe.wav, zebra.wav, affe.wav, flamingo.wav, frosch.wav, giraffe.wav,
+  krokodil.wav, elefant.wav, nashorn.wav, nilpferd.wav, tiger.wav, gepard.wav
+
+Fehlt eine Datei, erzeugt das Spiel automatisch ein synthetisches Geräusch.
+Freie Tiergeräusche gibt es z. B. auf freesound.org (Lizenz beachten!).
