@@ -74,11 +74,37 @@ public static class SoundService
         new SoundSegment(300, 150, 500, Wave.Saw, 0.3),
     });
 
-    public static void Success() => Play("_success", new[]
+    /// <param name="step">Jede Stufe klingt eine große Terz höher.</param>
+    public static void Success(int step = 0)
     {
-        new SoundSegment(659, 659, 110, Wave.Square, 0.22),
-        new SoundSegment(880, 880, 110, Wave.Square, 0.22),
-        new SoundSegment(1319, 1319, 300, Wave.Square, 0.22),
+        double pitch = Math.Pow(1.26, step);
+        Play($"_success{step}", new[]
+        {
+            new SoundSegment(659 * pitch, 659 * pitch, 110, Wave.Square, 0.22),
+            new SoundSegment(880 * pitch, 880 * pitch, 110, Wave.Square, 0.22),
+            new SoundSegment(1319 * pitch, 1319 * pitch, 300, Wave.Square, 0.22),
+        });
+    }
+
+    public static void Fanfare() => Play("_fanfare", new[]
+    {
+        new SoundSegment(523, 523, 100, Wave.Square, 0.25),
+        new SoundSegment(659, 659, 100, Wave.Square, 0.25),
+        new SoundSegment(784, 784, 100, Wave.Square, 0.25),
+        new SoundSegment(1047, 1047, 180, Wave.Square, 0.25),
+        new SoundSegment(784, 784, 100, Wave.Square, 0.25),
+        new SoundSegment(1047, 1047, 100, Wave.Square, 0.25),
+        new SoundSegment(1319, 1319, 500, Wave.Square, 0.25, 6, 10),
+    });
+
+    public static void Shower() => Play("_shower", new[]
+    {
+        new SoundSegment(0, 0, 900, Wave.Noise, 0.22),
+    });
+
+    public static void Tick() => Play("_tick", new[]
+    {
+        new SoundSegment(1400, 900, 18, Wave.Square, 0.12),
     });
 
     public static void Jeep() => Play("_jeep", new[]

@@ -3,36 +3,62 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:views="clr-namespace:SafariInc.Views"
         Title="Safari Inc. – Das Glück gehört dem Händler"
-        Width="1200" Height="800" MinWidth="1050" MinHeight="720"
+        Width="1200" Height="800" MinWidth="1100" MinHeight="720"
         WindowStartupLocation="CenterScreen"
         Background="{StaticResource Sand}"
         FontFamily="Segoe UI">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <!-- Kopfzeile: Titel + Inventar -->
-        <Border Grid.Row="0" Background="{StaticResource SafariGreen}" Padding="18,10" Panel.ZIndex="1">
+        <!-- Kopfzeile: Navigation + Inventar -->
+        <Border Grid.Row="0" Background="{StaticResource SafariGreen}" Padding="12,2" Panel.ZIndex="2">
             <DockPanel>
-                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
-                    <TextBlock Text="🚙" Style="{StaticResource Emoji}" FontSize="36" Foreground="#FFD54F"
-                               VerticalAlignment="Center" Margin="0,0,10,0" />
-                    <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="Safari Inc." FontSize="28" FontWeight="Bold" Foreground="White" />
-                        <TextBlock Text="Das Glück gehört dem Händler" FontSize="13" FontStyle="Italic"
-                                   Foreground="#C5E1A5" />
-                    </StackPanel>
+                <!-- Navigation: EIN Click-Handler für alle Buttons (Bubbling),
+                     EIN Preview-Handler, der Klicks während einer Safari blockiert (Tunneling) -->
+                <StackPanel x:Name="NavBar" DockPanel.Dock="Left" Orientation="Horizontal"
+                            ButtonBase.Click="NavBar_Click"
+                            PreviewMouseLeftButtonDown="NavBar_PreviewMouseLeftButtonDown">
+                    <Button Style="{StaticResource NavButton}" Tag="Safari" AutomationProperties.Name="Safari">
+                        <TextBlock Text="🚙" Style="{StaticResource Emoji}" />
+                    </Button>
+                    <Button Style="{StaticResource NavButton}" Tag="Zoo" AutomationProperties.Name="Zoo">
+                        <TextBlock Text="🏞" Style="{StaticResource Emoji}" />
+                    </Button>
                 </StackPanel>
 
-                <Button DockPanel.Dock="Right" Content="Neues Spiel" Click="NewGame_Click"
-                        Background="#8D6E63" Foreground="White" FontSize="14" VerticalAlignment="Center" />
+                <Button DockPanel.Dock="Right" Click="NewGame_Click" AutomationProperties.Name="Neues Spiel"
+                        Background="#8D6E63" Foreground="White" VerticalAlignment="Center" Padding="12,4">
+                    <TextBlock Text="🔄" Style="{StaticResource Emoji}" FontSize="22" />
+                </Button>
 
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center"
-                            Margin="0,0,20,0">
+                            Margin="0,0,6,0">
+                    <!-- Weg zum Freispiel: Jedes gefangene Tier lässt eine Flamme aufleuchten -->
+                    <Border x:Name="ProgressChip" Background="#22FFFFFF" CornerRadius="10" Padding="8,4"
+                            Margin="2,0" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock FontFamily="{StaticResource EmojiFont}" FontSize="20"
+                                       VerticalAlignment="Center"><Run Text="{Binding ProgressLit, Mode=OneWay}" Foreground="#FFB74D" /><Run Text="{Binding ProgressDim, Mode=OneWay}" Foreground="#55FFFFFF" /></TextBlock>
+                            <TextBlock Text="➜🎡" Style="{StaticResource Emoji}" FontSize="20" Foreground="White"
+                                       VerticalAlignment="Center" Margin="6,0,0,0" />
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Verdiente Freispiele: nur sichtbar, wenn welche da sind -->
+                    <Button x:Name="FreeSpinButton" Click="FreeSpin_Click" AutomationProperties.Name="Freispiel"
+                            Background="#FFD600" Padding="10,4" Margin="2,4" VerticalAlignment="Center"
+                            Visibility="{Binding HasFreeSpins, Converter={StaticResource BoolToVisibility}}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="🎡" Style="{StaticResource Emoji}" FontSize="28"
+                                       VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding FreeSpins}" FontSize="26" FontWeight="Bold"
+                                       VerticalAlignment="Center" Margin="8,0,0,0" />
+                        </StackPanel>
+                    </Button>
+
                     <ItemsControl ItemsSource="{Binding Baits}" VerticalAlignment="Center">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
@@ -41,12 +67,11 @@
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Border Background="#22FFFFFF" CornerRadius="10" Padding="10,4" Margin="4,0"
-                                        ToolTip="{Binding Info.Name}">
+                                <Border Background="#22FFFFFF" CornerRadius="10" Padding="8,4" Margin="2,0">
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="{Binding Info.Emoji}" Style="{StaticResource Emoji}"
-                                                   FontSize="20" Foreground="#FFCC80" />
-                                        <TextBlock Text="{Binding Count}" FontSize="20" FontWeight="Bold"
+                                                   FontSize="24" Foreground="#FFCC80" />
+                                        <TextBlock Text="{Binding Count}" FontSize="24" FontWeight="Bold"
                                                    Foreground="White" Margin="6,0,0,0" />
                                     </StackPanel>
                                 </Border>
@@ -54,18 +79,13 @@
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
 
-                    <Grid Margin="16,0,0,0">
-                        <Border Background="#FFD54F" CornerRadius="12" Padding="14,4">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="🪙" Style="{StaticResource Emoji}" FontSize="22"
-                                           Foreground="#E65100" VerticalAlignment="Center" />
-                                <TextBlock Text="{Binding Coins}" FontSize="24" FontWeight="Bold"
-                                           Foreground="{StaticResource Ink}" Margin="8,0,0,0" MinWidth="50"
-                                           VerticalAlignment="Center" />
-                            </StackPanel>
+                    <Grid Margin="6,0,0,0">
+                        <Border x:Name="CoinChip" Background="#FFD54F" CornerRadius="12" Padding="14,4">
+                            <ContentControl Content="{Binding Coins}" ContentTemplate="{StaticResource CoinAmount}"
+                                            FontSize="26" MinWidth="80" Foreground="{StaticResource Ink}" />
                         </Border>
                         <!-- schwebende +/- Anzeige bei CurrencyChanged -->
-                        <TextBlock x:Name="CoinDelta" FontSize="22" FontWeight="Bold" Opacity="0"
+                        <TextBlock x:Name="CoinDelta" FontSize="26" FontWeight="Bold" Opacity="0"
                                    HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,40,0,0"
                                    IsHitTestVisible="False">
                             <TextBlock.RenderTransform>
@@ -77,47 +97,49 @@
             </DockPanel>
         </Border>
 
-        <!-- Navigation: EIN Click-Handler für alle Buttons (Bubbling),
-             EIN Preview-Handler, der Klicks während einer Safari blockiert (Tunneling) -->
-        <Border Grid.Row="1" Background="{StaticResource SafariGreen}" BorderBrush="#1B5E20"
-                BorderThickness="0,1,0,0">
-            <StackPanel x:Name="NavBar" Orientation="Horizontal" HorizontalAlignment="Center"
-                        ButtonBase.Click="NavBar_Click"
-                        PreviewMouseLeftButtonDown="NavBar_PreviewMouseLeftButtonDown">
-                <Button Style="{StaticResource NavButton}" Tag="Safari">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="🌴" Style="{StaticResource Emoji}" Margin="0,0,8,0" />
-                        <TextBlock Text="Safari" />
-                    </StackPanel>
-                </Button>
-                <Button Style="{StaticResource NavButton}" Tag="Zoo">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="🏞" Style="{StaticResource Emoji}" Margin="0,0,8,0" />
-                        <TextBlock Text="Zoo" />
-                    </StackPanel>
-                </Button>
-                <Button Style="{StaticResource NavButton}" Tag="Merchant">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="💰" Style="{StaticResource Emoji}" Margin="0,0,8,0" />
-                        <TextBlock Text="Händler" />
-                    </StackPanel>
-                </Button>
-            </StackPanel>
-        </Border>
-
         <!-- Die Views bleiben im Baum (nur ausgeblendet), damit ihre Events
              immer bis zum Fenster hochblubbern können. -->
-        <Grid Grid.Row="2" Margin="12">
+        <Grid Grid.Row="1" Margin="12">
             <views:SafariView x:Name="SafariPage" />
             <views:ZooView x:Name="ZooPage" Visibility="Collapsed" />
-            <views:MerchantView x:Name="MerchantPage" Visibility="Collapsed" />
         </Grid>
 
-        <!-- Statuszeile für GameMessage -->
-        <Border Grid.Row="3" x:Name="StatusBar" Background="#C8E6C9" Padding="18,10">
-            <TextBlock x:Name="StatusText" FontSize="17" FontWeight="SemiBold" TextWrapping="Wrap"
-                       Foreground="{StaticResource Ink}"
-                       Text="Willkommen bei Safari Inc.! Wähle einen Köder und fahr auf Safari." />
+        <!-- Glücksrad als Popup über der Seite. Die Kopfzeile bleibt darüber, damit man die Münzen ankommen sieht. -->
+        <views:WheelPopup x:Name="WheelDialog" Grid.Row="1" Panel.ZIndex="1" />
+
+        <!-- Bild-Meldung für GameMessage: erscheint groß in der Mitte und verschwindet wieder -->
+        <Border x:Name="Toast" Grid.RowSpan="2" CornerRadius="28" Padding="44,20" Opacity="0" Panel.ZIndex="5"
+                HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="18" ShadowDepth="3" Opacity="0.35" />
+            </Border.Effect>
+            <TextBlock x:Name="ToastText" Style="{StaticResource Emoji}" FontSize="64"
+                       Foreground="{StaticResource Ink}" />
         </Border>
+
+        <!-- Belohnungseffekte fliegen auf dieser Ebene und fangen keine Klicks ab -->
+        <Canvas x:Name="FxLayer" Grid.RowSpan="2" Panel.ZIndex="6" ClipToBounds="True" IsHitTestVisible="False" />
+
+        <!-- Neues Spiel? Rückfrage nur mit Bildern: alles weg? Ja / Nein -->
+        <Grid x:Name="ConfirmOverlay" Grid.RowSpan="2" Background="#99000000" Visibility="Collapsed"
+              Panel.ZIndex="10">
+            <Border Style="{StaticResource Card}" HorizontalAlignment="Center" VerticalAlignment="Center"
+                    Padding="40,28">
+                <StackPanel>
+                    <TextBlock Text="🐾 🪙 ➜ 🗑" Style="{StaticResource Emoji}" FontSize="64" Foreground="#6D4C41"
+                               Margin="0,0,0,24" />
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                        <Button Click="CancelNewGame_Click" AutomationProperties.Name="Nein" Background="#7CB342"
+                                Foreground="White" Width="150" Height="110" Margin="12,0">
+                            <TextBlock Text="✖" Style="{StaticResource Emoji}" FontSize="60" />
+                        </Button>
+                        <Button Click="ConfirmNewGame_Click" AutomationProperties.Name="Ja, neu anfangen"
+                                Background="#E57373" Foreground="White" Width="150" Height="110" Margin="12,0">
+                            <TextBlock Text="🗑" Style="{StaticResource Emoji}" FontSize="60" />
+                        </Button>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Grid>
     </Grid>
 </Window>

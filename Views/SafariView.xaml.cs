@@ -13,11 +13,11 @@ namespace SafariInc.Views;
 
 public partial class SafariView : UserControl
 {
-    private const double GuessSeconds = 10;
+    private const double GuessSeconds = 15;
 
     private readonly DispatcherTimer _timer = new() { Interval = TimeSpan.FromMilliseconds(50) };
-    private HuntInfo? _hunt;
-    private AnimalSpecies? _lastTarget;
+    private HuntInfo? _hunt;      // läuft gerade, wird nach der Antwort null
+    private HuntInfo? _lastHunt;  // bleibt für "Nochmal hören" und die Ergebnisanzeige
     private DateTime _guessStart;
 
     public SafariView()
@@ -51,7 +51,7 @@ public partial class SafariView : UserControl
         if (preview.Handled)
         {
             SoundService.Locked();
-            source.RaiseEvent(new GameMessageEventArgs(preview.CancelReason ?? "Safari nicht möglich.", true));
+            source.RaiseEvent(new GameMessageEventArgs(preview.CancelReason ?? "✖", true));
             return;
         }
 
@@ -60,9 +60,7 @@ public partial class SafariView : UserControl
         source.RaiseEvent(used);
         if (used.Hunt == null) return;
 
-        _hunt = used.Hunt;
-        _lastTarget = used.Hunt.Target;
-        source.RaiseEvent(new GameMessageEventArgs($"{Catalog.Bait(bait).Name} ausgelegt. Auf geht's!"));
+        _hunt = _lastHunt = used.Hunt;
         DriveJeep();
     }
 
@@ -98,7 +96,7 @@ public partial class SafariView : UserControl
         DrivingText.Visibility = Visibility.Collapsed;
         GuessArea.Visibility = Visibility.Visible;
         ResultPanel.Visibility = Visibility.Collapsed;
-        QuestionText.Text = "Welches Tier hörst du?";
+        QuestionRow.Visibility = Visibility.Visible;
 
         GuessList.ItemsSource = _hunt.Options;
         GuessList.IsEnabled = true;
@@ -143,29 +141,52 @@ public partial class SafariView : UserControl
     }
 
     /// <summary>Wird vom Fenster aufgerufen, wenn AnimalCaptured / HuntFailed ankommt.</summary>
-    public void ShowResult(bool success, AnimalSpecies species)
+    /// <param name="catchStep">Fortschritt zum Freispiel: Der Jubel klingt mit jeder Stufe höher.</param>
+    public void ShowResult(bool success, AnimalSpecies species, int catchStep = 0)
     {
         SilhouetteBlur.BeginAnimation(BlurEffect.RadiusProperty, new DoubleAnimation(0, TimeSpan.FromMilliseconds(400)));
-        Silhouette.Foreground = species.RarityInfo.Color;
+        Silhouette.Foreground = species.Color;
 
-        QuestionText.Text = success ? "Gefangen!" : "Leider entwischt …";
-        ResultText.Text = success
-            ? $"{species.Name}! ({species.RarityInfo.Name}, Grundwert {species.BaseValue} Münzen). Es wartet jetzt in deinem Zoo."
-            : $"Gesucht war: {species.Name} ({species.RarityInfo.Name}). Dein Köder ist verloren.";
-        ResultText.Foreground = success ? new SolidColorBrush(Color.FromRgb(0x2E, 0x7D, 0x32)) : Brushes.Firebrick;
+        // Geschafft: Haken, Tier zieht in den Zoo. Nicht geschafft: Kreuz, der Köder ist weg.
+        ResultIcon.Text = success ? "✔" : "✖";
+        ResultIcon.Foreground = success ? new SolidColorBrush(Color.FromRgb(0x2E, 0x7D, 0x32)) : Brushes.Firebrick;
+        ResultPicture.Text = success ? "➜ 🏞" : $"{Catalog.Bait(_lastHunt!.Bait).Emoji} ➜ 🗑";
+        ResultStars.Text = species.RarityInfo.Stars;
+        ResultStars.Foreground = species.RarityInfo.Color;
+
+        QuestionRow.Visibility = Visibility.Collapsed;
         GuessList.Visibility = Visibility.Collapsed;
         ResultPanel.Visibility = Visibility.Visible;
 
-        if (success) SoundService.Success();
-        else SoundService.Fail();
+        if (success)
+        {
+            Attention.Bounce(Silhouette);
+            Attention.Pop(ResultIcon);
+            Attention.Pop(ResultStars);
+            Celebrate(species);
+            SoundService.Success(catchStep);
+        }
+        else
+        {
+            SoundService.Fail();
+        }
+    }
+
+    /// <summary>Je seltener das Tier, desto größer die Feier. Legendäre Tiere feiern wie ein Jackpot.</summary>
+    private void Celebrate(AnimalSpecies species)
+    {
+        var celebration = species.Rarity == Rarity.Legendaer
+            ? new CelebrationEventArgs(CelebrationKind.Jackpot)
+            : new CelebrationEventArgs(CelebrationKind.Confetti, species.RarityInfo.Stars.Length);
+        Silhouette.RaiseEvent(celebration);
     }
 
     private void Replay_Click(object sender, RoutedEventArgs e) => PlayAnimalSound();
 
     private void PlayAnimalSound()
     {
-        if (_lastTarget != null)
-            SoundService.Play(_lastTarget.Id, _lastTarget.Sound);
+        if (_lastHunt != null)
+            SoundService.Play(_lastHunt.Target.Id, _lastHunt.Target.Sound);
     }
 
     private void Continue_Click(object sender, RoutedEventArgs e) => Reset();

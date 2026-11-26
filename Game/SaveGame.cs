@@ -14,9 +14,11 @@ public static class SaveGame
         int Coins,
         Dictionary<BaitType, int> Baits,
         int UnlockedEnclosures,
-        List<SavedAnimal> Animals);
+        List<SavedAnimal> Animals,
+        int FreeSpins = 0,      // fehlt in älteren Spielständen
+        int CatchProgress = 0);
 
-    private record SavedAnimal(string SpeciesId, int EnclosureIndex);
+    private record SavedAnimal(string SpeciesId, int EnclosureIndex, bool IsClean = false);
 
     public static void Save(GameState state)
     {
@@ -25,7 +27,9 @@ public static class SaveGame
             state.Baits.ToDictionary(b => b.Info.Type, b => b.Count),
             state.Enclosures.Count(e => e.IsUnlocked),
             state.Enclosures.Where(e => e.Animal != null)
-                .Select(e => new SavedAnimal(e.Animal!.Species.Id, e.Index)).ToList());
+                .Select(e => new SavedAnimal(e.Animal!.Species.Id, e.Index, e.Animal.IsClean)).ToList(),
+            state.FreeSpins,
+            state.CatchProgress);
 
         try
         {
@@ -48,6 +52,8 @@ public static class SaveGame
             if (data == null) return false;
 
             state.Coins = data.Coins;
+            state.FreeSpins = data.FreeSpins;
+            state.CatchProgress = data.CatchProgress;
             foreach (var bait in state.Baits)
                 bait.Count = data.Baits.GetValueOrDefault(bait.Info.Type);
             foreach (var enclosure in state.Enclosures)
@@ -56,7 +62,7 @@ public static class SaveGame
             {
                 var species = Catalog.Animals.FirstOrDefault(a => a.Id == saved.SpeciesId);
                 if (species != null && saved.EnclosureIndex < state.Enclosures.Count)
-                    state.PlaceAnimal(new ZooAnimal(species), state.Enclosures[saved.EnclosureIndex]);
+                    state.PlaceAnimal(new ZooAnimal(species) { IsClean = saved.IsClean }, state.Enclosures[saved.EnclosureIndex]);
             }
             return true;
         }

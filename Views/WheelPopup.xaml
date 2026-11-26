@@ -1,0 +1,73 @@
+<UserControl x:Class="SafariInc.Views.WheelPopup"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Visibility="Collapsed"
+             PreviewMouseLeftButtonDown="Popup_PreviewMouseLeftButtonDown">
+    <!-- Dunkler Hintergrund. Ein Klick daneben schließt das Popup, sobald das Rad steht. -->
+    <Grid Background="#99000000" MouseLeftButtonDown="Backdrop_MouseLeftButtonDown">
+        <Viewbox StretchDirection="DownOnly" Margin="12">
+            <Border x:Name="Dialog" Style="{StaticResource Card}" Width="900" Height="540">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="500" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Das Rad -->
+                    <Viewbox Stretch="Uniform">
+                        <Grid Width="320" Height="340">
+                            <Canvas x:Name="Wheel" Width="320" Height="320" VerticalAlignment="Bottom">
+                                <Canvas.RenderTransform>
+                                    <RotateTransform x:Name="WheelRotation" CenterX="160" CenterY="160" />
+                                </Canvas.RenderTransform>
+                            </Canvas>
+                            <Ellipse Width="44" Height="44" Fill="#6D4C41" Stroke="White" StrokeThickness="4"
+                                     VerticalAlignment="Bottom" Margin="0,0,0,138" />
+                            <!-- Zeiger -->
+                            <Polygon Points="0,0 36,0 18,40" Fill="#3E2723" Stroke="White" StrokeThickness="3"
+                                     HorizontalAlignment="Center" VerticalAlignment="Top" />
+                        </Grid>
+                    </Viewbox>
+
+                    <DockPanel Grid.Column="1" Margin="16,0,0,0">
+                        <!-- Worum es geht: das Tier oder das Geschenk beim Freispiel -->
+                        <StackPanel DockPanel.Dock="Top">
+                            <TextBlock x:Name="SubjectIcon" Style="{StaticResource Emoji}" FontSize="92" />
+                            <TextBlock x:Name="SubjectStars" Style="{StaticResource Stars}" />
+                        </StackPanel>
+
+                        <Button x:Name="DoneButton" DockPanel.Dock="Bottom" Click="Done_Click"
+                                AutomationProperties.Name="Fertig" Background="#7CB342" Foreground="White"
+                                Height="84" Visibility="Hidden">
+                            <Polygon Points="0,0 44,26 0,52" Fill="White" Stroke="White"
+                                     StrokeThickness="4" StrokeLineJoin="Round" />
+                        </Button>
+
+                        <TextBlock x:Name="WheelResult" DockPanel.Dock="Bottom" Style="{StaticResource Emoji}"
+                                   FontSize="38" FontWeight="Bold" Margin="0,4" />
+
+                        <!-- Mögliche Auszahlungen als Balken: längerer Balken = mehr Münzen -->
+                        <ItemsControl x:Name="PayoutTable" VerticalAlignment="Center">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <DockPanel Margin="4,3">
+                                        <TextBlock Text="{Binding Face}" Style="{StaticResource Emoji}" FontSize="24"
+                                                   Foreground="{Binding Color}" Width="36" DockPanel.Dock="Left"
+                                                   VerticalAlignment="Center" />
+                                        <ContentControl Content="{Binding Payout}"
+                                                        ContentTemplate="{StaticResource CoinAmount}"
+                                                        FontSize="20" Width="94" DockPanel.Dock="Right"
+                                                        VerticalAlignment="Center" />
+                                        <Rectangle Width="{Binding BarWidth}" Height="18" RadiusX="4" RadiusY="4"
+                                                   Fill="{Binding Color}" HorizontalAlignment="Left" Margin="6,0"
+                                                   VerticalAlignment="Center" />
+                                    </DockPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </DockPanel>
+                </Grid>
+            </Border>
+        </Viewbox>
+    </Grid>
+</UserControl>

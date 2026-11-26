@@ -42,14 +42,31 @@ public static class GameEvents
     public static readonly RoutedEvent RouletteRequestedEvent = EventManager.RegisterRoutedEvent(
         "RouletteRequested", RoutingStrategy.Bubble, typeof(RouletteEventHandler), typeof(GameEvents));
 
-    public static readonly RoutedEvent AnimalDonatedEvent = EventManager.RegisterRoutedEvent(
-        "AnimalDonated", RoutingStrategy.Bubble, typeof(AnimalEventHandler), typeof(GameEvents));
-
     public static readonly RoutedEvent EnclosureBoughtEvent = EventManager.RegisterRoutedEvent(
         "EnclosureBought", RoutingStrategy.Bubble, typeof(EnclosureEventHandler), typeof(GameEvents));
 
     public static readonly RoutedEvent NewGameRequestedEvent = EventManager.RegisterRoutedEvent(
         "NewGameRequested", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(GameEvents));
+
+    public static readonly RoutedEvent AnimalWashedEvent = EventManager.RegisterRoutedEvent(
+        "AnimalWashed", RoutingStrategy.Bubble, typeof(AnimalEventHandler), typeof(GameEvents));
+
+    public static readonly RoutedEvent AnimalMovedEvent = EventManager.RegisterRoutedEvent(
+        "AnimalMoved", RoutingStrategy.Bubble, typeof(AnimalMovedEventHandler), typeof(GameEvents));
+
+    /// <summary>Tier wurde auf der Karte aufs Glücksrad gezogen. Das Fenster öffnet das Rad als Popup.</summary>
+    public static readonly RoutedEvent AnimalWheelRequestedEvent = EventManager.RegisterRoutedEvent(
+        "AnimalWheelRequested", RoutingStrategy.Bubble, typeof(AnimalEventHandler), typeof(GameEvents));
+
+    public static readonly RoutedEvent FreeSpinRequestedEvent = EventManager.RegisterRoutedEvent(
+        "FreeSpinRequested", RoutingStrategy.Bubble, typeof(FreeSpinEventHandler), typeof(GameEvents));
+
+    public static readonly RoutedEvent FreeSpinCompletedEvent = EventManager.RegisterRoutedEvent(
+        "FreeSpinCompleted", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(GameEvents));
+
+    /// <summary>Belohnungseffekt. Die Effekte starten an dem Element, das das Ereignis auslöst.</summary>
+    public static readonly RoutedEvent CelebrationEvent = EventManager.RegisterRoutedEvent(
+        "Celebration", RoutingStrategy.Bubble, typeof(CelebrationEventHandler), typeof(GameEvents));
 
     // ---------- Bubbling: Ergebnisse des GameManagers ----------
 
@@ -59,10 +76,16 @@ public static class GameEvents
     public static readonly RoutedEvent HuntFailedEvent = EventManager.RegisterRoutedEvent(
         "HuntFailed", RoutingStrategy.Bubble, typeof(AnimalEventHandler), typeof(GameEvents));
 
+    public static readonly RoutedEvent FreeSpinEarnedEvent = EventManager.RegisterRoutedEvent(
+        "FreeSpinEarned", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(GameEvents));
+
     public static readonly RoutedEvent CurrencyChangedEvent = EventManager.RegisterRoutedEvent(
         "CurrencyChanged", RoutingStrategy.Bubble, typeof(CurrencyChangedEventHandler), typeof(GameEvents));
 
-    /// <summary>Statusmeldung – darf von jeder View und vom GameManager ausgelöst werden.</summary>
+    /// <summary>
+    /// Bild-Meldung aus Emojis (kein Text, die Kinder können noch nicht lesen) –
+    /// darf von jeder View und vom GameManager ausgelöst werden.
+    /// </summary>
     public static readonly RoutedEvent GameMessageEvent = EventManager.RegisterRoutedEvent(
         "GameMessage", RoutingStrategy.Bubble, typeof(GameMessageEventHandler), typeof(GameEvents));
 }
@@ -77,6 +100,9 @@ public delegate void AnimalEventHandler(object sender, AnimalEventArgs e);
 public delegate void EnclosureEventHandler(object sender, EnclosureEventArgs e);
 public delegate void CurrencyChangedEventHandler(object sender, CurrencyChangedEventArgs e);
 public delegate void GameMessageEventHandler(object sender, GameMessageEventArgs e);
+public delegate void AnimalMovedEventHandler(object sender, AnimalMovedEventArgs e);
+public delegate void FreeSpinEventHandler(object sender, FreeSpinEventArgs e);
+public delegate void CelebrationEventHandler(object sender, CelebrationEventArgs e);
 
 // ---------- EventArgs ----------
 
@@ -125,6 +151,45 @@ public class RouletteEventArgs : RoutedEventArgs
     /// <summary>Rückgabe des GameManagers: auf welchem Feld das Rad stehen bleibt.</summary>
     public int SliceIndex { get; set; } = -1;
     public int Payout { get; set; }
+}
+
+public class FreeSpinEventArgs : RoutedEventArgs
+{
+    public FreeSpinEventArgs() : base(GameEvents.FreeSpinRequestedEvent)
+    {
+    }
+
+    /// <summary>Rückgabe des GameManagers: auf welchem Feld das Rad stehen bleibt.</summary>
+    public int SliceIndex { get; set; } = -1;
+    public int Payout { get; set; }
+}
+
+public class AnimalMovedEventArgs : RoutedEventArgs
+{
+    public AnimalMovedEventArgs(ZooAnimal animal, Enclosure target) : base(GameEvents.AnimalMovedEvent)
+    {
+        Animal = animal;
+        Target = target;
+    }
+
+    public ZooAnimal Animal { get; }
+    public Enclosure Target { get; }
+}
+
+public enum CelebrationKind { Hearts, Confetti, Jackpot, Splash }
+
+public class CelebrationEventArgs : RoutedEventArgs
+{
+    public CelebrationEventArgs(CelebrationKind kind, int strength = 1) : base(GameEvents.CelebrationEvent)
+    {
+        Kind = kind;
+        Strength = strength;
+    }
+
+    public CelebrationKind Kind { get; }
+
+    /// <summary>Größe der Feier, z. B. die Sterne des gefangenen Tieres.</summary>
+    public int Strength { get; }
 }
 
 public class AnimalEventArgs : RoutedEventArgs

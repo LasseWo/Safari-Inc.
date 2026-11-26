@@ -20,6 +20,7 @@ public class GameManager
 
     private HuntInfo? _currentHunt;
     private (ZooAnimal Animal, int Payout, int SliceIndex)? _pendingRoulette;
+    private int? _pendingFreeSpin;
 
     public GameManager(UIElement root)
     {
@@ -34,9 +35,12 @@ public class GameManager
         root.AddHandler(GameEvents.AnimalGuessedEvent, new AnimalGuessedEventHandler(OnAnimalGuessed));
         root.AddHandler(GameEvents.AnimalSoldEvent, new AnimalSoldEventHandler(OnAnimalSold));
         root.AddHandler(GameEvents.RouletteRequestedEvent, new RouletteEventHandler(OnRouletteRequested));
-        root.AddHandler(GameEvents.AnimalDonatedEvent, new AnimalEventHandler(OnAnimalDonated));
         root.AddHandler(GameEvents.EnclosureBoughtEvent, new EnclosureEventHandler(OnEnclosureBought));
         root.AddHandler(GameEvents.NewGameRequestedEvent, new RoutedEventHandler(OnNewGameRequested));
+        root.AddHandler(GameEvents.AnimalWashedEvent, new AnimalEventHandler(OnAnimalWashed));
+        root.AddHandler(GameEvents.AnimalMovedEvent, new AnimalMovedEventHandler(OnAnimalMoved));
+        root.AddHandler(GameEvents.FreeSpinRequestedEvent, new FreeSpinEventHandler(OnFreeSpinRequested));
+        root.AddHandler(GameEvents.FreeSpinCompletedEvent, new RoutedEventHandler(OnFreeSpinCompleted));
 
         if (!SaveGame.TryLoad(State))
             ResetState();
@@ -49,11 +53,11 @@ public class GameManager
     private void OnPreviewBaitUsed(object sender, BaitEventArgs e)
     {
         if (State.IsBusy)
-            Cancel(e, "Es läuft schon eine Safari!");
+            Cancel(e, "⏳");
         else if (State.Bait(e.Bait).Count == 0)
-            Cancel(e, $"Du hast keinen {Catalog.Bait(e.Bait).Name} mehr. Kauf erst einen!");
+            Cancel(e, $"{Catalog.Bait(e.Bait).Emoji} ✖");
         else if (State.FreeEnclosure == null)
-            Cancel(e, "Dein Zoo ist voll! Verkaufe ein Tier oder kaufe ein neues Gehege.");
+            Cancel(e, "🏞 ✖");
     }
 
     private static void Cancel(BaitEventArgs e, string reason)
@@ -111,21 +115,91 @@ public class GameManager
         {
             var animal = new ZooAnimal(target);
             State.PlaceAnimal(animal, enclosure);
+            bool earnedFreeSpin = AdvanceCatchProgress();
             Raise(new AnimalEventArgs(GameEvents.AnimalCapturedEvent, target, animal));
-            Message($"Gefangen! {target.Name} zieht in Gehege {enclosure.Number} ein.");
+            if (earnedFreeSpin) Raise(new RoutedEventArgs(GameEvents.FreeSpinEarnedEvent));
         }
         else
         {
             Raise(new AnimalEventArgs(GameEvents.HuntFailedEvent, target));
-            Message(e.GuessedSpeciesId == null
-                ? $"Zu langsam! Gesucht war: {target.Name}. Der Köder ist weg."
-                : $"Falsch geraten! Gesucht war: {target.Name}. Der Köder ist weg.", true);
             CheckBankrupt();
         }
         Save();
     }
 
-    // ---------- Händler ----------
+    /// <summary>Jedes gefangene Tier bringt das Freispiel näher. Gibt true zurück, wenn es jetzt verdient ist.</summary>
+    private bool AdvanceCatchProgress()
+    {
+        State.CatchProgress++;
+        if (State.CatchProgress < Catalog.CatchesPerFreeSpin) return false;
+
+        State.CatchProgress = 0;
+        State.FreeSpins++;
+        return true;
+    }
+
+    // ---------- Zoo-Karte ----------
+
+    /// <summary>Die erste Dusche bringt Köder. Das Tier bleibt im Zoo, jede weitere Dusche ist nur noch zum Spaß.</summary>
+    private void OnAnimalWashed(object sender, AnimalEventArgs e)
+    {
+        e.Handled = true;
+        if (State.IsBusy || e.Animal == null || !State.Animals.Contains(e.Animal)) return;
+
+        SoundService.Shower();
+        if (e.Animal.IsClean)
+        {
+            Message($"{e.Species.Emoji} ✨");
+            return;
+        }
+
+        e.Animal.IsClean = true;
+        var rarity = e.Species.RarityInfo;
+        State.Bait(rarity.ShowerReward.Bait).Count += rarity.ShowerReward.Count;
+        Message($"{e.Species.Emoji} ✨ ➜ {rarity.RewardIcons}");
+        Save();
+    }
+
+    private void OnAnimalMoved(object sender, AnimalMovedEventArgs e)
+    {
+        e.Handled = true;
+        if (State.IsBusy || !e.Target.IsUnlocked || !e.Target.IsEmpty) return;
+
+        State.MoveAnimal(e.Animal, e.Target);
+        Save();
+    }
+
+    // ---------- Freispiele ----------
+
+    private void OnFreeSpinRequested(object sender, FreeSpinEventArgs e)
+    {
+        e.Handled = true;
+        if (State.IsBusy || !State.HasFreeSpins) return;
+
+        // Die Spiellogik entscheidet das Ergebnis, die View animiert nur dorthin.
+        int slice = _rng.Next(Catalog.WheelSlices.Length);
+        int payout = Catalog.Payout(Catalog.FreeSpinBaseValue, Catalog.WheelSlices[slice]);
+
+        _pendingFreeSpin = payout;
+        State.IsBusy = true;
+        e.SliceIndex = slice;
+        e.Payout = payout;
+    }
+
+    private void OnFreeSpinCompleted(object sender, RoutedEventArgs e)
+    {
+        e.Handled = true;
+        if (_pendingFreeSpin is not { } payout) return;
+
+        // Erst hier abziehen: Wird das Spiel während der Drehung geschlossen, bleibt das Freispiel erhalten.
+        _pendingFreeSpin = null;
+        State.FreeSpins--;
+        State.IsBusy = false;
+        ChangeCoins(payout);
+        Save();
+    }
+
+    // ---------- Verkauf ----------
 
     private void OnRouletteRequested(object sender, RouletteEventArgs e)
     {
@@ -134,7 +208,7 @@ public class GameManager
 
         // Die Spiellogik entscheidet das Ergebnis, die View animiert nur dorthin.
         int slice = _rng.Next(Catalog.WheelSlices.Length);
-        int payout = Catalog.Payout(e.Animal.Species, Catalog.WheelSlices[slice]);
+        int payout = Catalog.Payout(e.Animal.Species.BaseValue, Catalog.WheelSlices[slice]);
 
         _pendingRoulette = (e.Animal, payout, slice);
         State.IsBusy = true;
@@ -152,40 +226,19 @@ public class GameManager
         {
             if (State.IsBusy) return;
             payout = e.Animal.Species.BaseValue;
-            Message($"{e.Animal.Species.Name} sicher verkauft für {payout} Münzen.");
+            Message($"{e.Animal.Species.Emoji} ➜ 🪙 {payout}");
         }
         else
         {
             if (_pendingRoulette?.Animal != e.Animal) return;
             payout = _pendingRoulette.Value.Payout;
-            var outcome = Catalog.WheelSlices[_pendingRoulette.Value.SliceIndex];
             _pendingRoulette = null;
             State.IsBusy = false;
-
-            int diff = payout - e.Animal.Species.BaseValue;
-            Message($"{outcome.Name}! {e.Animal.Species.Name} bringt {payout} Münzen " +
-                    (diff >= 0 ? $"(+{diff} gegenüber sicher)." : $"({diff} gegenüber sicher). Der Händler lacht."),
-                    diff < 0);
+            // Das Ergebnis zeigt das WheelPopup direkt neben dem Rad an.
         }
 
         State.RemoveAnimal(e.Animal);
         ChangeCoins(payout);
-        Save();
-    }
-
-    private void OnAnimalDonated(object sender, AnimalEventArgs e)
-    {
-        e.Handled = true;
-        if (State.IsBusy || e.Animal == null || !State.Animals.Contains(e.Animal)) return;
-
-        State.RemoveAnimal(e.Animal);
-        var rewards = e.Species.RarityInfo.ShelterReward;
-        foreach (var (bait, count) in rewards)
-            State.Bait(bait).Count += count;
-
-        SoundService.Success();
-        Message($"{e.Species.Name} ist jetzt im Tierheim. Du bekommst: " +
-                string.Join(", ", rewards.Select(r => $"{r.Count}× {Catalog.Bait(r.Bait).Name}")));
         Save();
     }
 
@@ -198,7 +251,7 @@ public class GameManager
         if (State.Coins < info.Price)
         {
             SoundService.Locked();
-            Message($"Zu wenig Münzen für {info.Name} ({info.Price}).", true);
+            Message("🪙 ✖", true);
             return;
         }
 
@@ -217,19 +270,19 @@ public class GameManager
         if (next != e.Enclosure)
         {
             SoundService.Locked();
-            Message($"Kaufe zuerst Gehege {next.Number}.", true);
+            Message("🔒", true);
             return;
         }
         if (State.Coins < e.Enclosure.Price)
         {
             SoundService.Locked();
-            Message($"Gehege {e.Enclosure.Number} kostet {e.Enclosure.Price} Münzen.", true);
+            Message("🪙 ✖", true);
             return;
         }
 
         e.Enclosure.IsUnlocked = true;
         ChangeCoins(-e.Enclosure.Price);
-        Message($"Gehege {e.Enclosure.Number} gebaut!");
+        Message("🔓");
         Save();
     }
 
@@ -238,7 +291,6 @@ public class GameManager
         e.Handled = true;
         if (State.IsBusy) return;
         ResetState();
-        Message("Neues Spiel gestartet. Viel Glück auf Safari!");
     }
 
     // ---------- Hilfsmethoden ----------
@@ -252,9 +304,12 @@ public class GameManager
         foreach (var bait in State.Baits)
             bait.Count = bait.Info.Type switch { BaitType.Fleisch => 3, BaitType.Premium => 1, _ => 0 };
         State.Coins = Catalog.StartCoins;
+        State.FreeSpins = 0;
+        State.CatchProgress = 0;
         State.IsBusy = false;
         _currentHunt = null;
         _pendingRoulette = null;
+        _pendingFreeSpin = null;
         Save();
     }
 
@@ -274,8 +329,9 @@ public class GameManager
                      && State.Coins < Catalog.Baits.Min(b => b.Price);
         if (!stuck) return;
 
-        State.Bait(BaitType.Fleisch).Count++;
-        Message("Pleite! Safari Inc. schenkt dir einen Fleischköder. Das Glück gehört dem Händler.", true);
+        var gift = State.Bait(BaitType.Fleisch);
+        gift.Count++;
+        Message($"🎁 {gift.Info.Emoji}");
     }
 
     private void Raise(RoutedEventArgs e) => _root.RaiseEvent(e);
