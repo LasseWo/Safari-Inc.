@@ -1,8 +1,12 @@
-Hier können echte Tiergeräusche als WAV-Datei abgelegt werden.
-Der Dateiname muss der Tier-Id aus Model\Catalog.cs entsprechen, z. B.:
+Hier liegen die Geräusche als WAV-Datei. Der Dateiname entspricht der Id:
 
-  loewe.wav, zebra.wav, affe.wav, flamingo.wav, frosch.wav, giraffe.wav,
-  krokodil.wav, elefant.wav, nashorn.wav, nilpferd.wav, tiger.wav, gepard.wav
+  Tiere (Id aus Model\Catalog.cs):
+    loewe.wav, zebra.wav, affe.wav, flamingo.wav, frosch.wav, giraffe.wav,
+    krokodil.wav, elefant.wav, nashorn.wav, nilpferd.wav, tiger.wav, gepard.wav
+
+  Effekte (aus Audio\SoundService.cs):
+    _coin, _jackpot, _fanfare, _fail, _success0 bis _success2, _shower, _tick, _jeep, _locked
 
 Fehlt eine Datei, erzeugt das Spiel automatisch ein synthetisches Geräusch.
-Freie Tiergeräusche gibt es z. B. auf freesound.org (Lizenz beachten!).
+Format: PCM-WAV (System.Media.SoundPlayer kann kein MP3/OGG).
+Herkunft und Lizenzen: QUELLEN.txt. Bei neuen Dateien die Lizenz beachten und dort eintragen!

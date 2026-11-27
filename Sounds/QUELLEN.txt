@@ -1,0 +1,63 @@
+Herkunft der Geräusche
+======================
+
+Alle Dateien wurden zugeschnitten, in der Lautstärke angeglichen und als WAV
+(22050 Hz, mono, 16 bit) gespeichert. Angegeben ist jeweils die Stelle im Original.
+Quelle bei Freesound war jeweils die Vorschau-MP3 (128 kbit/s) der verlinkten Seite.
+
+Lizenzen:
+  CC0           https://creativecommons.org/publicdomain/zero/1.0/
+  CC BY 4.0     https://creativecommons.org/licenses/by/4.0/
+
+Tiere
+-----
+loewe.wav     CC0        "Lion roaring.mp3" von Bidone, 10,6-15,3 s
+              https://freesound.org/people/Bidone/sounds/69572/
+tiger.wav     CC0        "Tiger Roar" von lauramellis, 0,8-3,2 s
+              https://freesound.org/people/lauramellis/sounds/263115/
+zebra.wav     CC0        "Zebras - Grant's Zebra Braying" von TheKingOfGeeks360, 0,1-2,7 s
+              https://freesound.org/people/TheKingOfGeeks360/sounds/850661/
+affe.wav      CC0        "Affen schreit.mp3" von Bidone, 0-3,3 s
+              https://freesound.org/people/Bidone/sounds/67361/
+flamingo.wav  CC0        "Flamingo.mp3" von Bidone, 0-3,4 s
+              https://freesound.org/people/Bidone/sounds/67354/
+frosch.wav    CC0        "frog_quak.mp3" von katzlbt
+              https://freesound.org/people/katzlbt/sounds/361117/
+krokodil.wav  CC0        Zusammengesetzt: Fauchen + zweimal Zuschnappen (tiefer gestimmt, mehr Bass)
+              Fauchen: "S27-21 Alligator hiss twice.wav" von craigsmith, 1,5-2,6 s
+              https://freesound.org/people/craigsmith/sounds/675513/
+              Schnappen: "Jaw or teeth bite at air" von Wigglesworth, 9,0 s und 8,17 s (je 0,35 s)
+              https://freesound.org/people/Wigglesworth/sounds/830093/
+elefant.wav   CC0        "Elephant Trumpets Growls.flac" von D.jones, 0-1,6 s
+              https://freesound.org/people/D.jones/sounds/527845/
+nashorn.wav   CC0        "Indian rhinoceros (Rhinoceros unicornis)" von Breviceps, 0-3,1 s
+              https://freesound.org/people/Breviceps/sounds/535810/
+nilpferd.wav  CC0        "Hippopotamus Sounds" von cmp1
+              https://freesound.org/people/cmp1/sounds/759858/
+giraffe.wav   CC0        Zusammengesetzt: Blätterrascheln, überblendet in Kauen. Giraffen sind fast
+              stumm, darum ein Geräusch, das Kinder mit ihnen verbinden (Blätter fressen).
+              Rascheln: "Rustling foliage.WAV" von DDT197, 6,0-7,2 s
+              https://freesound.org/people/DDT197/sounds/445788/
+              Kauen: "horse chewing tree bark.wav" von Yuval, 69,0-71,0 s
+              https://freesound.org/people/Yuval/sounds/196123/
+gepard.wav    CC BY 4.0  Rufe erwachsener Geparden (Schnurren, 0,3-3,7 s) von D. Smirnova, I. Volodin,
+              T. Demina und E. Volodina, PLOS ONE 2016, doi:10.1371/journal.pone.0158546
+              https://commons.wikimedia.org/wiki/File:Acoustic-Structure-and-Contextual-Use-of-Calls-by-Captive-Male-and-Female-Cheetahs-(Acinonyx-pone.0158546.s001.oga
+
+Effekte (alle CC0)
+------------------
+_coin.wav       "Coin GET!" von plasterbrain        https://freesound.org/people/plasterbrain/sounds/242857/
+_jackpot.wav    "Jackpot Win" von Qvantor           https://freesound.org/people/Qvantor/sounds/878618/
+_fanfare.wav    "Tada Fanfare A" von plasterbrain   https://freesound.org/people/plasterbrain/sounds/397355/
+_fail.wav       "wah wah sad trombone.wav" von kirbydx, 1,3-fach schneller
+                https://freesound.org/people/kirbydx/sounds/175409/
+_success0-2.wav "Short Success Sound Glockenspiel Treasure Video Game.mp3" von FunWithSound, 0,08-1,68 s,
+                Stufe 1 und 2 jeweils eine große Terz höher
+                https://freesound.org/people/FunWithSound/sounds/456965/
+_shower.wav     "Shower" von vmgraw, 2,0-3,2 s      https://freesound.org/people/vmgraw/sounds/235624/
+_tick.wav       "Button Tick" von NenadSimic, leise (-18 dB)
+                https://freesound.org/people/NenadSimic/sounds/268108/
+_jeep.wav       "Car passing by.wav" von hinzebeat, 0,2-2,5 s
+                https://freesound.org/people/hinzebeat/sounds/171447/
+_locked.wav     "Boink_v3.wav" von simon.rue, 0-0,7 s
+                https://freesound.org/people/simon.rue/sounds/61847/
